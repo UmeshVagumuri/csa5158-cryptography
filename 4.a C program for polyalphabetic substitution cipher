@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <string.h>
+
+#define ALPHABET_SIZE 26
+
+void generateKey(char key[], int keyLen, char keyword[]) {
+    int i;
+    for (i = 0; i < keyLen; i++) {
+        key[i] = keyword[i % strlen(keyword)];
+    }
+}
+
+void monoalphabeticSubstitution(char plaintext[], char key[], char ciphertext[]) {
+    int i;
+    for (i = 0; i < strlen(plaintext); i++) {
+        ciphertext[i] = 'A' + (plaintext[i] - 'A' + key[i] - 'A') % ALPHABET_SIZE;
+    }
+    ciphertext[i] = '\0';
+}
+
+void polyalphabeticSubstitutionCipher(char plaintext[], char keyword[], char ciphertext[]) {
+    int keyLen = strlen(plaintext);
+    char key[keyLen];
+    generateKey(key, keyLen, keyword);
+    monoalphabeticSubstitution(plaintext, key, ciphertext);
+}
+
+int main() {
+    char plaintext[100], keyword[20], ciphertext[100];
+    printf("Enter the plaintext: ");
+    fgets(plaintext, sizeof(plaintext), stdin);
+    plaintext[strlen(plaintext) - 1] = '\0'; // remove the newline character
+    printf("Enter the keyword: ");
+    fgets(keyword, sizeof(keyword), stdin);
+    keyword[strlen(keyword) - 1] = '\0'; // remove the newline character
+    polyalphabeticSubstitutionCipher(plaintext, keyword, ciphertext);
+    printf("Ciphertext: %s\n", ciphertext);
+    return 0;
+}
+
+output
+Enter the plaintext: ATTACKATDAWN
+Enter the keyword: LEMON
+Ciphertext: LXFOPVEFRNHR
