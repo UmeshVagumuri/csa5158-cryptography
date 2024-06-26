@@ -1,0 +1,49 @@
+#include <stdio.h>
+#include <string.h>
+
+#define SIZE 5
+
+void playfair(char key[], char str[]) {
+    char table[SIZE][SIZE];
+    int i, k = 0, flag[26] = {0};
+    char alphabet[26] = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
+    
+    for (i = 0; i < strlen(key); i++) {
+        if (!flag[toupper(key[i]) - 'A']) {
+            table[k / SIZE][k % SIZE] = toupper(key[i]);
+            flag[toupper(key[i]) - 'A'] = 1;
+            k++;
+        }
+    }
+    
+    for (i = 0; i < 26; i++) {
+        if (!flag[i]) {
+            table[k / SIZE][k % SIZE] = alphabet[i];
+            k++;
+        }
+    }
+    
+    for (i = 0; i < strlen(str); i += 2) {
+        int row1, row2, col1, col2;
+        for (int j = 0; j < SIZE; j++) {
+            for (int l = 0; l < SIZE; l++) {
+                if (table[j][l] == toupper(str[i])) {
+                    row1 = j;
+                    col1 = l;
+                }
+                if (table[j][l] == toupper(str[i + 1])) {
+                    row2 = j;
+                    col2 = l;
+                }
+            }
+        }
+        printf("%c%c", table[row1][(col1 + 1) % SIZE], table[row2][(col2 + 1) % SIZE]);
+    }
+}
+
+int main() {
+    char key[20] = "KEY";
+    char str[100] = "HELLO";
+    playfair(key, str);
+    return 0;
+}
