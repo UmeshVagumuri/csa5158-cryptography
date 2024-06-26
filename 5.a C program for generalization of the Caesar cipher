@@ -1,0 +1,75 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_TEXT_LEN 1000
+#define MAX_KEY_LEN 100
+
+void toUpperCase(char* str) {
+    for (int i = 0; str[i]; i++) {
+        str[i] = toupper(str[i]);
+    }
+}
+
+void generateKey(const char* text, const char* keyword, char* key) {
+    int textLen = strlen(text);
+    int keyLen = strlen(keyword);
+    for (int i = 0, j = 0; i < textLen; i++) {
+        if (isalpha(text[i])) {
+            key[i] = keyword[j % keyLen];
+            j++;
+        } else {
+            key[i] = text[i];
+        }
+    }
+    key[textLen] = '\0';
+}
+
+void encrypt(const char* text, const char* key, char* cipherText) {
+    int textLen = strlen(text);
+    for (int i = 0; i < textLen; i++) {
+        if (isalpha(text[i])) {
+            char base = isupper(text[i]) ? 'A' : 'a';
+            cipherText[i] = (text[i] - base + toupper(key[i]) - 'A') % 26 + base;
+        } else {
+            cipherText[i] = text[i];
+        }
+    }
+    cipherText[textLen] = '\0';
+}
+
+int main() {
+    char text[MAX_TEXT_LEN];
+    char keyword[MAX_KEY_LEN];
+    char key[MAX_TEXT_LEN];
+    char cipherText[MAX_TEXT_LEN];
+
+    printf("Enter the plaintext: ");
+    fgets(text, MAX_TEXT_LEN, stdin);
+    text[strcspn(text, "\n")] = '\0';  // Remove trailing newline character
+
+    printf("Enter the keyword: ");
+    fgets(keyword, MAX_KEY_LEN, stdin);
+    keyword[strcspn(keyword, "\n")] = '\0';  // Remove trailing newline character
+
+    toUpperCase(text);
+    toUpperCase(keyword);
+
+    generateKey(text, keyword, key);
+    encrypt(text, key, cipherText);
+
+    printf("Original Text : %s\n", text);
+    printf("Keyword       : %s\n", keyword);
+    printf("Generated Key : %s\n", key);
+    printf("Cipher Text   : %s\n", cipherText);
+
+    return 0;
+}
+OUTPUT:
+Enter the plaintext: COMPUTER
+Enter the keyword: 2
+Original Text : COMPUTER
+Keyword       : 2
+Generated Key : 22222222
+Cipher Text   : 4@>AFE6C
