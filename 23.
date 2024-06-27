@@ -1,0 +1,121 @@
+#include <stdio.h>
+
+// Initial permutation table
+int IP[] = {2, 6, 3, 1, 4, 8, 5, 7};
+// Inverse initial permutation table
+int IP_inverse[] = {4, 1, 3, 5, 7, 2, 8, 6};
+// Expansion table
+int E[] = {4, 1, 2, 3, 2, 3, 4, 1};
+// 4-bit to 2-bit S-boxes
+int S0[4][4] = {
+    {1, 0, 3, 2},
+    {3, 2, 1, 0},
+    {0, 2, 1, 3},
+    {3, 1, 3, 2}
+};
+int S1[4][4] = {
+    {0, 1, 2, 3},
+    {2, 0, 1, 3},
+    {3, 0, 1, 0},
+    {2, 1, 0, 3}
+};
+// Permutation table
+int P[] = {2, 4, 3, 1};
+
+// Initial key permutation
+int keyp[] = {3, 5, 2, 7, 4, 10, 1, 9, 8, 6};
+
+// Split a 8-bit block into two 4-bit blocks
+void split(int *L, int *R, int block) {
+    *L = (block & 0xF0) >> 4;
+    *R = block & 0x0F;
+}
+
+// Perform permutation according to specified table
+int permute(int *table, int block) {
+    int result = 0;
+    for (int i = 0; i < 8; ++i) {
+        result <<= 1;
+        result |= (block >> (8 - table[i])) & 1;
+    }
+    return result;
+}
+
+// Perform circular left shift
+int left_shift(int bits, int shift) {
+    return ((bits << shift) | (bits >> (4 - shift))) & 0x0F;
+}
+
+// Apply S-box substitution
+int sbox(int input, int sbox[4][4]) {
+    int row = ((input & 0x08) >> 2) | (input & 0x01);
+    int col = (input & 0x06) >> 1;
+    return sbox[row][col];
+}
+
+// Function to generate the subkeys
+void generateSubKeys(int *K1, int *K2, int key) {
+    int permuted_key = permute(keyp, key);
+    int C = (permuted_key & 0xFC) >> 2;
+    int D = (permuted_key & 0x03) << 4 | ((permuted_key & 0xF0) >> 4);
+    *K1 = permute(P, (C << 6 | D));
+    C = left_shift(C, 1);
+    D = left_shift(D, 1);
+    *K2 = permute(P, (C << 6 | D));
+}
+
+// S-DES encryption function
+int encrypt(int plaintext, int key) {
+    int L, R, f, K1, K2;
+    split(&L, &R, plaintext);
+    generateSubKeys(&K1, &K2, key);
+    R = permute(E, R);
+    f = R ^ K1;
+    R = (S0[(f & 0xF0) >> 4][(f & 0x0F)] << 2) | S1[(f & 0xF0) >> 4][(f & 0x0F)];
+    R = permute(P, R);
+    L ^= R;
+    L ^= K2;
+    return (L << 4) | R;
+}
+
+// S-DES decryption function
+int decrypt(int ciphertext, int key) {
+    int L, R, f, K1, K2;
+    split(&L, &R, ciphertext);
+    generateSubKeys(&K1, &K2, key);
+    L ^= K2;
+    R = L;
+    L = R ^ K1;
+    R = permute(E, R);
+    f = R ^ K1;
+    R = (S0[(f & 0xF0) >> 4][(f & 0x0F)] << 2) | S1[(f & 0xF0) >> 4][(f & 0x0F)];
+    R = permute(P, R);
+    L ^= R;
+    return (L << 4) | R;
+}
+
+int main() {
+    int plaintext = 0b000000010000001000000100;
+    int key = 0b0111111101;
+    int initial_counter = 0b00000000;
+
+    // Encrypt
+    printf("Encrypting plaintext: %08X\n", plaintext);
+    printf("Using key: %08X\n", key);
+    int encrypted = encrypt(plaintext ^ initial_counter, key);
+    printf("Encrypted ciphertext: %08X\n", encrypted);
+
+    // Decrypt
+    printf("\nDecrypting ciphertext: %08X\n", encrypted);
+    int decrypted = decrypt(encrypted, key);
+    printf("Decrypted plaintext: %08X\n", decrypted ^ initial_counter);
+
+    return 0;
+}
+OUTPUT:
+Encrypting plaintext: 00010204
+Using key: 000001FD
+Encrypted ciphertext: 000009F0
+
+Decrypting ciphertext: 000009F0
+Decrypted plaintext: 000003FF
