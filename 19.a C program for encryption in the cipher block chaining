@@ -1,0 +1,112 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+#define BLOCK_SIZE 8  // 64 bits
+#define KEY_SIZE 24   // 3 * 64 bits for 3DES
+
+// Function prototypes
+void des_encrypt(uint64_t* block, uint64_t key);
+void des_decrypt(uint64_t* block, uint64_t key);
+void xor_blocks(uint64_t* block1, uint64_t block2);
+void triple_des_encrypt(uint64_t* block, uint64_t key1, uint64_t key2, uint64_t key3);
+void triple_des_decrypt(uint64_t* block, uint64_t key1, uint64_t key2, uint64_t key3);
+void cbc_encrypt(uint64_t* plaintext, uint64_t* ciphertext, size_t length, uint64_t iv, uint64_t key1, uint64_t key2, uint64_t key3);
+void cbc_decrypt(uint64_t* ciphertext, uint64_t* plaintext, size_t length, uint64_t iv, uint64_t key1, uint64_t key2, uint64_t key3);
+
+// Dummy DES functions
+void des_encrypt(uint64_t* block, uint64_t key) {
+    // Placeholder for actual DES encryption
+    *block = *block ^ key;  // Simple XOR for demonstration purposes
+}
+
+void des_decrypt(uint64_t* block, uint64_t key) {
+    // Placeholder for actual DES decryption
+    *block = *block ^ key;  // Simple XOR for demonstration purposes
+}
+
+void xor_blocks(uint64_t* block1, uint64_t block2) {
+    *block1 ^= block2;
+}
+
+void triple_des_encrypt(uint64_t* block, uint64_t key1, uint64_t key2, uint64_t key3) {
+    des_encrypt(block, key1);
+    des_decrypt(block, key2);
+    des_encrypt(block, key3);
+}
+
+void triple_des_decrypt(uint64_t* block, uint64_t key1, uint64_t key2, uint64_t key3) {
+    des_decrypt(block, key3);
+    des_encrypt(block, key2);
+    des_decrypt(block, key1);
+}
+
+void cbc_encrypt(uint64_t* plaintext, uint64_t* ciphertext, size_t length, uint64_t iv, uint64_t key1, uint64_t key2, uint64_t key3) {
+    uint64_t block = iv;
+
+    for (size_t i = 0; i < length; i++) {
+        xor_blocks(&plaintext[i], block);
+        triple_des_encrypt(&plaintext[i], key1, key2, key3);
+        ciphertext[i] = plaintext[i];
+        block = ciphertext[i];
+    }
+}
+
+void cbc_decrypt(uint64_t* ciphertext, uint64_t* plaintext, size_t length, uint64_t iv, uint64_t key1, uint64_t key2, uint64_t key3) {
+    uint64_t block = iv;
+    uint64_t temp;
+
+    for (size_t i = 0; i < length; i++) {
+        temp = ciphertext[i];
+        triple_des_decrypt(&ciphertext[i], key1, key2, key3);
+        xor_blocks(&ciphertext[i], block);
+        plaintext[i] = ciphertext[i];
+        block = temp;
+    }
+}
+
+int main() {
+    uint64_t key1 = 0x133457799BBCDFF1;
+    uint64_t key2 = 0x1122334455667788;
+    uint64_t key3 = 0xAABBCCDDEEFF0011;
+    uint64_t iv = 0x1234567890ABCDEF;
+
+    uint64_t plaintext[] = {0x0123456789ABCDEF, 0xFEDCBA9876543210};
+    size_t length = sizeof(plaintext) / sizeof(plaintext[0]);
+
+    uint64_t ciphertext[length];
+    uint64_t decrypted[length];
+
+    cbc_encrypt(plaintext, ciphertext, length, iv, key1, key2, key3);
+    cbc_decrypt(ciphertext, decrypted, length, iv, key1, key2, key3);
+
+    printf("Plaintext:\n");
+    for (size_t i = 0; i < length; i++) {
+        printf("0x%016llX\n", plaintext[i]);
+    }
+
+    printf("\nCiphertext:\n");
+    for (size_t i = 0; i < length; i++) {
+        printf("0x%016llX\n", ciphertext[i]);
+    }
+
+    printf("\nDecrypted:\n");
+    for (size_t i = 0; i < length; i++) {
+        printf("0x%016llX\n", decrypted[i]);
+    }
+
+    return 0;
+}
+
+OUTPUT:
+Plaintext:
+0xBBBABBFF3925A868
+0xEDCBA9876F543210
+
+Ciphertext:
+0x0123456789ABCDEF
+0xFEDCBA9876543210
+
+Decrypted:
+0x0123456789ABCDEF
+0xFEDCBA9876543210
