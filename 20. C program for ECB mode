@@ -1,0 +1,62 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define BLOCK_SIZE 16 // Assuming AES with a block size of 16 bytes
+
+// Function prototypes
+void encrypt_ecb(unsigned char *plaintext, unsigned char *key, int plaintext_len);
+void decrypt_ecb(unsigned char *ciphertext, unsigned char *key, int ciphertext_len);
+
+int main() {
+    unsigned char key[BLOCK_SIZE] = "0123456789ABCDEF"; // 128-bit key (16 bytes)
+    unsigned char plaintext[] = "Hello, ECB mode!"; // Example plaintext
+    int plaintext_len = strlen((const char *)plaintext);
+
+    // Ensure plaintext length is a multiple of BLOCK_SIZE for simplicity
+    int padded_len = (plaintext_len + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE;
+    unsigned char *padded_plaintext = (unsigned char *)malloc(padded_len);
+    memcpy(padded_plaintext, plaintext, plaintext_len);
+    
+    printf("Original plaintext: %s\n", plaintext);
+    
+    // Encrypt using ECB mode
+    encrypt_ecb(padded_plaintext, key, padded_len);
+
+    // Print encrypted ciphertext
+    printf("Encrypted ciphertext: ");
+    for (int i = 0; i < padded_len; ++i) {
+        printf("%02X", padded_plaintext[i]);
+    }
+    printf("\n");
+
+    // Decrypt using ECB mode
+    decrypt_ecb(padded_plaintext, key, padded_len);
+
+    // Print decrypted plaintext
+    printf("Decrypted plaintext: %s\n", padded_plaintext);
+
+    free(padded_plaintext); // Free dynamically allocated memory
+
+    return 0;
+}
+
+// AES-like ECB encryption function (for demonstration purposes only)
+void encrypt_ecb(unsigned char *plaintext, unsigned char *key, int plaintext_len) {
+    // Dummy encryption: XOR plaintext with key
+    for (int i = 0; i < plaintext_len; ++i) {
+        plaintext[i] ^= key[i % BLOCK_SIZE];
+    }
+}
+
+// AES-like ECB decryption function (for demonstration purposes only)
+void decrypt_ecb(unsigned char *ciphertext, unsigned char *key, int ciphertext_len) {
+    // Dummy decryption: XOR ciphertext with key
+    for (int i = 0; i < ciphertext_len; ++i) {
+        ciphertext[i] ^= key[i % BLOCK_SIZE];
+    }
+}
+OUTPUT:
+Original plaintext: Hello, ECB mode!
+Encrypted ciphertext: 78545E5F5B1916727B7B206D6F646521
+Decrypted plaintext: Hello, ECB mode!<ƒ┌╘8─
