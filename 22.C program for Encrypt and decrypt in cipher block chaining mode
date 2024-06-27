@@ -1,0 +1,46 @@
+#include <stdio.h>
+#include <string.h>
+
+#define BLOCK_SIZE 4
+#define KEY_SIZE 10
+
+void sdes_encrypt(unsigned char *block, unsigned char *key) {
+    unsigned char l = (block[0] << 4) | (block[1] << 2) | (block[2] >> 2) | (block[3] >> 4);
+    unsigned char r = (block[0] >> 2) | (block[1] >> 4) | (block[2] << 4) | (block[3] << 2);
+    l ^= key[0] << 3 | key[1] << 2 | key[2] << 1 | key[3];
+    r ^= key[4] << 3 | key[5] << 2 | key[6] << 1 | key[7];
+    unsigned char temp = l;
+    l = r;
+    r = temp ^ ((l >> 6) & 1) << 6 | ((l >> 4) & 1) << 4 | ((l >> 2) & 1) << 2 | (l & 1);
+    l ^= key[0] << 3 | key[1] << 2 | key[2] << 1 | key[3];
+    r ^= key[4] << 3 | key[5] << 2 | key[6] << 1 | key[7];
+    temp = l;
+    l = r;
+    r = temp ^ ((l >> 6) & 1) << 6 | ((l >> 4) & 1) << 4 | ((l >> 2) & 1) << 2 | (l & 1);
+    block[0] = (l >> 4) & 0x0F;
+    block[1] = (l >> 2) & 0x03 | (l << 2) & 0x30;
+    block[2] = (l << 4) & 0xF0 | (r >> 4) & 0x0F;
+    block[3] = (r >> 2) & 0x03 | (r << 2) & 0x30;
+}
+
+int main() {
+    unsigned char plaintext[] = {0x00, 0x00, 0x01, 0x03};
+    unsigned char key[] = {0x01, 0x11, 0x11, 0x11, 0x01};
+    unsigned char iv[] = {0x10, 0x10, 0x10, 0x10};
+    unsigned char ciphertext[BLOCK_SIZE];
+
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        ciphertext[i] = plaintext[i] ^ iv[i];
+    }
+    sdes_encrypt(ciphertext, key);
+    printf("Ciphertext: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        printf("%02x ", ciphertext[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+
+output
+Ciphertext: 07 11 77 33
