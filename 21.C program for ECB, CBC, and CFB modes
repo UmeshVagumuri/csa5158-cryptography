@@ -1,0 +1,35 @@
+#include <stdio.h>
+#include <string.h>
+
+#define BLOCK_SIZE 8
+
+void des_encrypt(unsigned char *block, unsigned char *key) {
+    int i;
+    for (i = 0; i < BLOCK_SIZE; i++) {
+        block[i] ^= key[i % 8];
+    }
+}
+
+void ecb_encrypt(unsigned char *plaintext, unsigned char *ciphertext, unsigned char *key) {
+    int i;
+    for (i = 0; i < strlen(plaintext); i += BLOCK_SIZE) {
+        des_encrypt(&plaintext[i], key);
+        memcpy(&ciphertext[i], &plaintext[i], BLOCK_SIZE);
+    }
+}
+
+int main() {
+    unsigned char plaintext[] = "Hello, World!";
+    unsigned char key[] = "my_secret_key";
+    unsigned char ciphertext[BLOCK_SIZE * (strlen(plaintext) / BLOCK_SIZE + 1)];
+    unsigned char decrypted[BLOCK_SIZE * (strlen(plaintext) / BLOCK_SIZE + 1)];
+
+    ecb_encrypt(plaintext, ciphertext, key);
+    ecb_encrypt(ciphertext, decrypted, key);
+    printf("ECB: %s\n", decrypted);
+
+    return 0;
+}
+
+output
+ECB: Hello, World!
